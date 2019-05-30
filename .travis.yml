@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t victoroancea/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run victoroancea/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t victoroancea/multi-client ./client
+  - docker build -t victoroancea/multi-nginx ./nginx
+  - docker build -t victoroancea/multi-server ./server
+  - docker build -t victoroancea/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push victoroancea/multi-client
+  - docker push victoroancea/multi-nginx
+  - docker push victoroancea/multi-server
+  - docker push victoroancea/multi-worker
